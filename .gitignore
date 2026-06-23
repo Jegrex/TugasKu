@@ -1,0 +1,9 @@
+# Abaikan file rahasia
+.env
+
+# Abaikan database lokal agar tidak mengotori GitHub
+database.db
+
+# Abaikan folder virtual environment karena ukurannya besar
+venv/
+__pycache__/
