@@ -82,6 +82,7 @@ plotly==6.8.0
 plyer==2.1.0
 propcache==0.5.2
 protobuf==7.35.1
+psycopg2-binary==2.9.12
 pyarrow==24.0.0
 pycparser==2.23
 pydantic==2.13.4

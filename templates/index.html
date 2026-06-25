@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pusat Kendali - Tugas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 font-sans min-h-screen p-6">
+    <div class="max-w-4xl mx-auto space-y-6">
+        
+        <div class="bg-blue-600 rounded-xl p-6 text-white shadow-lg">
+            <h1 class="text-3xl font-bold">Dashboard Pengingat Tugas 🚀</h1>
+            <p class="mt-2 text-blue-100">Pantau dan kelola seluruh daftar pekerjaan aktif.</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-lg font-semibold text-gray-800">Progres Penyelesaian Tugas Tim</h2>
+                <span id="teksPersentase" class="text-sm font-bold text-blue-600">0% Selesai</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                <div id="bilahProgres" class="bg-gradient-to-r from-blue-500 to-green-500 h-full w-0 transition-all duration-500 ease-out"></div>
+            </div>
+            <p id="teksRasio" class="text-xs text-gray-500 mt-2">0 dari 0 tugas telah diselesaikan</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow-md h-fit">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Tambah Tugas Baru</h2>
+                <form id="formTugas" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Mata Kuliah / Kategori</label>
+                        <input type="text" id="matkul" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Detail Pekerjaan</label>
+                        <textarea id="deskripsi" required rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Tenggat Waktu (Deadline)</label>
+                        <input type="text" id="deadline" required placeholder="Contoh: Besok Jam 12:00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition">
+                        Simpan ke Sistem
+                    </button>
+                </form>
+            </div>
+
+            <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-md">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Daftar Tugas Aktif</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-left text-sm text-gray-600">
+                        <thead class="border-b bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 font-medium text-gray-900">ID</th>
+                                <th class="px-4 py-3 font-medium text-gray-900">Kategori</th>
+                                <th class="px-4 py-3 font-medium text-gray-900">Detail</th>
+                                <th class="px-4 py-3 font-medium text-gray-900">Deadline</th>
+                                <th class="px-4 py-3 font-medium text-gray-900">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelTugas" class="divide-y">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function muatTugas() {
+    const response = await fetch('/api/tugas');
+    const data = await response.json();
+    
+    const tabel = document.getElementById('tabelTugas');
+    tabel.innerHTML = ''; 
+    
+    // --- LOGIKA HITUNG PROGRES ---
+    const totalTugas = data.length;
+    const tugasSelesai = data.filter(t => t.is_selesai).length;
+    const persentase = totalTugas > 0 ? Math.round((tugasSelesai / totalTugas) * 100) : 0;
+    
+    // Update elemen visual progres
+    document.getElementById('bilahProgres').style.width = `${persentase}%`;
+    document.getElementById('teksPersentase').innerText = `${persentase}% Selesai`;
+    document.getElementById('teksRasio').innerText = `${tugasSelesai} dari ${totalTugas} tugas telah diselesaikan`;
+    // ------------------------------
+
+    data.forEach(tugas => {
+        const baris = `
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 font-medium text-gray-900">${tugas.id}</td>
+                <td class="px-4 py-3 font-semibold text-blue-600">${tugas.mata_kuliah}</td>
+                <td class="px-4 py-3">${tugas.deskripsi}</td>
+                <td class="px-4 py-3">
+                    <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">${tugas.deadline}</span>
+                </td>
+                <td class="px-4 py-3">
+                    ${tugas.is_selesai 
+                        ? '<span class="text-green-600 font-bold">✅ Selesai</span>' 
+                        : '<span class="text-orange-500 font-bold">⏳ Aktif</span>'}
+                </td>
+            </tr>
+        `;
+        tabel.innerHTML += baris;
+    });
+}
+
+        // Fungsi untuk mengirim data baru ke API saat tombol diklik
+        document.getElementById('formTugas').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Mencegah halaman me-refresh
+            
+            const dataBaru = {
+                mata_kuliah: document.getElementById('matkul').value,
+                deskripsi: document.getElementById('deskripsi').value,
+                deadline: document.getElementById('deadline').value,
+                is_selesai: false
+            };
+
+            const response = await fetch('/api/tugas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataBaru)
+            });
+
+            if (response.ok) {
+                alert("Sukses! Tugas baru telah ditambahkan ke sistem.");
+                document.getElementById('formTugas').reset(); // Kosongkan form
+                muatTugas(); // Segarkan tabel
+            }
+        });
+
+        // Muat data segera setelah halaman dibuka
+        muatTugas();
+    </script>
+</body>
+</html>

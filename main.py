@@ -8,24 +8,28 @@ from aiogram.filters import Command, CommandObject
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dotenv import load_dotenv
+# Tambahkan Request di baris ini
+from fastapi import FastAPI, Request
+from fastapi.templating import Jinja2Templates # Tambahkan baris baru ini
+
+load_dotenv()
 
 # ==========================================
 # 1. KONFIGURASI UTAMA
 # ==========================================
-load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-TARGET_USER_ID = int(os.getenv("TARGET_USER_ID"))  # GANTI DENGAN ID TELEGRAM KAMU (Berupa Angka, Tanpa Tanda Kutip)
+TARGET_USER_ID = int(os.getenv("TARGET_USER_ID"))
 
-sqlite_file_name = "database.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
-engine = create_engine(sqlite_url, connect_args={"check_same_thread": False})
+# Ambil URL PostgreSQL dari file .env
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Buat engine SQLModel untuk PostgreSQL (tidak perlu connect_args check_same_thread lagi seperti SQLite)
+engine = create_engine(DATABASE_URL)
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-# Inisialisasi Scheduler di Background
 scheduler = AsyncIOScheduler()
-
 
 # ==========================================
 # 2. MODEL DATABASE
@@ -169,16 +173,33 @@ app = FastAPI(title="API Pengingat Tugas Mahasiswa", version="1.2.0", lifespan=l
 
 
 # ==========================================
-# 6. ENDPOINT API
+# 6. ENDPOINT API & WEB DASHBOARD
 # ==========================================
-@app.get("/")
-def home():
-    return {"status": "aktif", "pesan": "Sistem Otomatis Berjalan!"}
+# Beri tahu FastAPI letak folder HTML kita
+templates = Jinja2Templates(directory="templates")
 
+@app.get("/")
+async def home(request: Request):
+    # Memanggil parameter secara eksplisit (request=..., name=...) agar sesuai versi terbaru
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={"request": request}
+    )
+
+# (Kode @app.get("/api/tugas") dan seterusnya tetap biarkan seperti aslinya)
+# Endpoint untuk mengambil daftar tugas ke tabel web
+@app.get("/api/tugas")
+def ambil_semua_tugas_api():
+    with Session(engine) as session:
+        tugas = session.exec(select(Tugas)).all()
+        return tugas
+
+# Endpoint untuk menyimpan tugas baru dari form web
 @app.post("/api/tugas")
 def tambah_tugas_api(tugas_baru: Tugas):
     with Session(engine) as session:
         session.add(tugas_baru)
         session.commit()
         session.refresh(tugas_baru)
-        return {"status": "sukses", "data": tugas_baru}
+        return {"status": "sukses", "data_tersimpan": tugas_baru}
