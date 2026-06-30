@@ -8,6 +8,7 @@ from aiogram.filters import Command, CommandObject
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 # Tambahkan Request di baris ini
 from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates # Tambahkan baris baru ini
@@ -35,14 +36,75 @@ scheduler = AsyncIOScheduler()
 # 2. MODEL DATABASE
 # ==========================================
 class Tugas(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     mata_kuliah: str
     deskripsi: str
-    deadline: str
+    deadline: datetime
     is_selesai: bool = Field(default=False)
+    # Kolom baru untuk tingkat prioritas (Tinggi, Sedang, Rendah)
+    prioritas: str = Field(default="Sedang") 
+    # Tiga sakelar alarm untuk melacak riwayat pengingat
+    is_diingatkan_h3: bool = Field(default=False)
+    is_diingatkan_h2: bool = Field(default=False)
+    is_diingatkan_h1: bool = Field(default=False)
 
 def inisialisasi_database():
     SQLModel.metadata.create_all(engine)
+
+# ==========================================
+# BOT FEATURE: DAILY MORNING BRIEFING
+# ==========================================
+
+async def kirim_briefing_pagi():
+    with Session(engine) as session:
+        # 1. Ambil semua tugas yang belum selesai
+        tugas_aktif = session.exec(
+            select(Tugas).where(Tugas.is_selesai == False)
+        ).all()
+        
+        total_aktif = len(tugas_aktif)
+        
+        # Jika tidak ada tugas sama sekali, beri kabar gembira
+        if total_aktif == 0:
+            pesan = (
+                "☀️ <b>DAILY MORNING BRIEFING</b> ☀️\n\n"
+                "Selamat pagi! Hari ini kalender tugas Anda benar-benar bersih. "
+                "Tidak ada tugas aktif yang menanti. Nikmati hari santai Anda! 🎉"
+            )
+            await bot.send_message(chat_id=TARGET_USER_ID, text=pesan, parse_mode="HTML")
+            return
+
+        # 2. Hitung statistik berdasarkan prioritas tugas
+        tinggi = len([t for t in tugas_aktif if t.prioritas == "Tinggi"])
+        sedang = len([t for t in tugas_aktif if t.prioritas == "Sedang"])
+        rendah = len([t for t in tugas_aktif if t.prioritas == "Rendah"])
+        
+        # Ambil daftar khusus untuk tugas prioritas tinggi
+        tugas_tinggi = [t for t in tugas_aktif if t.prioritas == "Tinggi"]
+        
+        # 3. Susun template pesan laporan pagi
+        pesan = (
+            f"☀️ <b>DAILY MORNING BRIEFING</b> ☀️\n\n"
+            f"Selamat pagi! Berikut adalah rekapitulasi tugas kuliah Anda hari ini:\n\n"
+            f"📊 <b>Ringkasan Tugas:</b>\n"
+            f"• Total Tugas Aktif: <b>{total_aktif}</b> tugas\n\n"
+            f"🚨 <b>Berdasarkan Tingkat Kepentingan:</b>\n"
+            f"• 🔴 Tinggi: {tinggi} tugas\n"
+            f"• 🟡 Sedang: {sedang} tugas\n"
+            f"• ⚪ Rendah: {rendah} tugas\n\n"
+        )
+        
+        # Jika ada tugas prioritas tinggi, jabarkan daftarnya agar menjadi fokus utama
+        if tinggi > 0:
+            pesan += "⚠️ <b>Fokus Utama Hari Ini (Prioritas Tinggi):</b>\n"
+            for idx, t in enumerate(tugas_tinggi, 1):
+                pesan += f"{idx}. <b>[{t.mata_kuliah}]</b> {t.deskripsi}\n   ⏱️ Deadline: {t.deadline.strftime('%d %b %Y, %H:%M')}\n"
+            pesan += "\n"
+            
+        pesan += "Mari susun skala prioritas dan cicil tugas Anda hari ini. Tetap semangat! 💪"
+        
+        # 4. Tembakkan ke Telegram pribadi Anda
+        await bot.send_message(chat_id=TARGET_USER_ID, text=pesan, parse_mode="HTML")
 
 
 # ==========================================
@@ -50,28 +112,53 @@ def inisialisasi_database():
 # ==========================================
 # Tambahkan kata 'async' di depan def
 async def kirim_pengingat_otomatis():
-    """Fungsi ini akan dipicu otomatis oleh Scheduler untuk membroadcast tugas"""
-    print("[SCHEDULING] Mengecek tugas untuk pengingat otomatis...")
-    
     with Session(engine) as session:
-        statement = select(Tugas).where(Tugas.is_selesai == False)
-        daftar_tugas = session.exec(statement).all()
+        # Hanya ambil tugas yang BELUM selesai
+        tugas_aktif = session.exec(select(Tugas).where(Tugas.is_selesai == False)).all()
+        waktu_sekarang = datetime.now()
+
+        for tugas in tugas_aktif:
+            # Hitung jarak waktu dari sekarang ke deadline
+            selisih = tugas.deadline - waktu_sekarang
+
+            # =======================================================
+            # LOGIKA KHUSUS: TUGAS PRIORITAS TINGGI (H-3, H-2, H-1)
+            # =======================================================
+            if tugas.prioritas == "Tinggi":
+                
+                # --- PENGINGAT H-3 (Antara 48 jam hingga 72 jam sebelum deadline) ---
+                if timedelta(hours=48) < selisih <= timedelta(hours=72) and not tugas.is_diingatkan_h3:
+                    pesan = f"🚨 <b>PENGINGAT H-3: TUGAS UTAMA!</b> 🚨\n\nKategori: {tugas.mata_kuliah}\nTugas: {tugas.deskripsi}\nDeadline: {tugas.deadline.strftime('%d %b %Y, %H:%M')}\n\n<i>Tugas ini berprioritas tinggi. Jangan lupa dicicil ya!</i>"
+                    await bot.send_message(chat_id=TARGET_USER_ID, text=pesan, parse_mode="HTML")
+                    tugas.is_diingatkan_h3 = True
+
+                # --- PENGINGAT H-2 (Antara 24 jam hingga 48 jam sebelum deadline) ---
+                elif timedelta(hours=24) < selisih <= timedelta(hours=48) and not tugas.is_diingatkan_h2:
+                    pesan = f"⚠️ <b>PENGINGAT H-2: TUGAS UTAMA!</b> ⚠️\n\nKategori: {tugas.mata_kuliah}\nTugas: {tugas.deskripsi}\nDeadline: {tugas.deadline.strftime('%d %b %Y, %H:%M')}\n\n<i>Waktu berjalan terus. Pastikan progres tugas ini aman!</i>"
+                    await bot.send_message(chat_id=TARGET_USER_ID, text=pesan, parse_mode="HTML")
+                    tugas.is_diingatkan_h2 = True
+
+                # --- PENGINGAT H-1 (Kurang dari 24 jam sebelum deadline) ---
+                elif timedelta(hours=0) < selisih <= timedelta(hours=24) and not tugas.is_diingatkan_h1:
+                    pesan = f"🔥 <b>PENGINGAT H-1: BESOK DEADLINE!</b> 🔥\n\nKategori: {tugas.mata_kuliah}\nTugas: {tugas.deskripsi}\nDeadline: {tugas.deadline.strftime('%d %b %Y, %H:%M')}\n\n<i>Kesempatan terakhir! Segera selesaikan dan kumpulkan!</i>"
+                    await bot.send_message(chat_id=TARGET_USER_ID, text=pesan, parse_mode="HTML")
+                    tugas.is_diingatkan_h1 = True
+
+
+
+            # =======================================================
+            # LOGIKA NORMAL: TUGAS SEDANG / RENDAH (H-1 SAJA)
+            # =======================================================
+            else:
+                if timedelta(hours=0) < selisih <= timedelta(hours=24) and not tugas.is_diingatkan_h1:
+                    pesan = f"🔔 <b>PENGINGAT DEADLINE H-1</b> 🔔\n\nKategori: {tugas.mata_kuliah}\nTugas: {tugas.deskripsi}\nDeadline: {tugas.deadline.strftime('%d %b %Y, %H:%M')}"
+                    await bot.send_message(chat_id=TARGET_USER_ID, text=pesan, parse_mode="HTML")
+                    tugas.is_diingatkan_h1 = True
+
+            # Simpan setiap perubahan status alarm ke database
+            session.add(tugas)
         
-        if daftar_tugas:
-            teks_pengingat = "⏰ **PENGINGAT OTOMATIS: Jangan Lupa Tugas Kamu!**\n\n"
-            for i, tugas in enumerate(daftar_tugas, 1):
-                teks_pengingat += (
-                    f"{i}. 📖 **{tugas.mata_kuliah}**\n"
-                    f"   🗓️ Deadline: {tugas.deadline}\n"
-                    f"   📝 Detail: {tugas.deskripsi}\n\n"
-                )
-            teks_pengingat += "Semangat kuliahnya! Kerjakan sekarang biar tenang nanti. 💪"
-            
-            # Ganti asyncio.run menjadi await langsung
-            await bot.send_message(chat_id=TARGET_USER_ID, text=teks_pengingat, parse_mode="Markdown")
-            print(f"[SCHEDULING] Pengingat sukses dikirim ke user {TARGET_USER_ID}")
-        else:
-            print("[SCHEDULING] Tidak ada tugas aktif, pengingat tidak dikirim.")
+        session.commit()
 
 
 # ==========================================
@@ -154,8 +241,16 @@ async def lifespan(app: FastAPI):
     
     # Konfigurasi Scheduler: Jalankan fungsi setiap 30 detik untuk simulasi/testing awal
     # Di dunia nyata, ini bisa diatur menjadi: trigger='cron', hour=7, minute=0 (setiap jam 7 pagi)
+    # 1. TUGAS PERTAMA: Satpam penjaga deadline (Mengecek setiap 30 detik)
     scheduler.add_job(kirim_pengingat_otomatis, trigger='interval', seconds=30)
+    
+    # 2. TUGAS KEDUA: Asisten pembuat laporan (Hanya menyala jam 07:00 pagi)
+    scheduler.add_job(kirim_briefing_pagi, trigger='cron', hour=7, minute=0)
+    
+    # Mulai jalankan semua tugas di atas
     scheduler.start()
+    yield
+    scheduler.shutdown()
     print("[SISTEM] Scheduler Otomatis Dimulai...")
     
     print("[SISTEM] Memulai Bot Telegram...")
@@ -203,3 +298,55 @@ def tambah_tugas_api(tugas_baru: Tugas):
         session.commit()
         session.refresh(tugas_baru)
         return {"status": "sukses", "data_tersimpan": tugas_baru}
+    
+# ==========================================
+# API: FITUR SELESAIKAN & HAPUS TUGAS
+# ==========================================
+
+@app.put("/api/tugas/{tugas_id}/selesai")
+def selesaikan_tugas(tugas_id: int):
+    with Session(engine) as session:
+        tugas = session.get(Tugas, tugas_id)
+        if not tugas:
+            return {"error": "Tugas tidak ditemukan"}
+        
+        # Ubah status menjadi selesai
+        tugas.is_selesai = True
+        session.add(tugas)
+        session.commit()
+        return {"pesan": "Tugas berhasil diselesaikan"}
+
+@app.delete("/api/tugas/{tugas_id}")
+def hapus_tugas(tugas_id: int):
+    with Session(engine) as session:
+        tugas = session.get(Tugas, tugas_id)
+        if not tugas:
+            return {"error": "Tugas tidak ditemukan"}
+        
+        # Hapus tugas dari database
+        session.delete(tugas)
+        session.commit()
+        return {"pesan": "Tugas berhasil dihapus"}
+    
+@app.put("/api/tugas/{tugas_id}")
+def perbarui_tugas(tugas_id: int, tugas_baru: Tugas):
+    with Session(engine) as session:
+        tugas_lama = session.get(Tugas, tugas_id)
+        if not tugas_lama:
+            return {"error": "Tugas tidak ditemukan"}
+        
+        # LOGIKA CERDAS: Jika deadline diubah, reset status pengingat bot ke False
+        if tugas_lama.deadline != tugas_baru.deadline:
+            tugas_lama.is_diingatkan_h3 = False
+            tugas_lama.is_diingatkan_h2 = False
+            tugas_lama.is_diingatkan_h1 = False
+
+        # Perbarui data lama dengan data yang baru diedit
+        tugas_lama.mata_kuliah = tugas_baru.mata_kuliah
+        tugas_lama.deskripsi = tugas_baru.deskripsi
+        tugas_lama.prioritas = tugas_baru.prioritas
+        tugas_lama.deadline = tugas_baru.deadline
+        
+        session.add(tugas_lama)
+        session.commit()
+        return {"pesan": "Tugas berhasil diperbarui"}
