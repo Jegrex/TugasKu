@@ -2,17 +2,17 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Task Manager Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style> .progress-bar-animated { transition: width 0.5s ease-in-out; } </style>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800">
+<body class="bg-gray-100 font-sans text-gray-800 pb-10">
 
-    <!-- Auth Section (Sama seperti sebelumnya) -->
-    <div id="auth-section" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
-        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
+    <!-- Auth Section -->
+    <div id="auth-section" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 p-4">
+        <div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl w-full max-w-md">
             <div class="text-center mb-6">
                 <h1 class="text-4xl mb-2">🎓</h1>
                 <h2 class="text-2xl font-bold text-gray-800" id="auth-title">Masuk ke Akun Anda</h2>
@@ -21,16 +21,18 @@
             <form id="auth-form" onsubmit="handleAuth(event)">
                 <div class="mb-4"><label class="block text-sm font-semibold text-gray-600 mb-1">Username</label><input type="text" id="username" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required></div>
                 <div class="mb-4"><label class="block text-sm font-semibold text-gray-600 mb-1">Password</label><input type="password" id="password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required></div>
+                
                 <div class="mb-6 hidden" id="telegram-input-group">
-                        <label class="block text-sm font-semibold text-gray-600 mb-1">ID Telegram (Opsional)</label>
-                        <input type="text" id="telegram_id" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Contoh: 123456789">
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">ID Telegram (Opsional)</label>
+                    <input type="text" id="telegram_id" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Contoh: 123456789">
                     <div class="mt-2 p-3 bg-blue-50 rounded border border-blue-200 text-sm">
-                        <p class="font-bold text-blue-800 mb-1">🤔 Bingung cara cari ID Telegram?</p>
-                        <p class="text-blue-700">1. Klik <a href="https://t.me/RemainderTugasKuBot" target="_blank" class="font-bold underline text-blue-600 hover:text-blue-800">Link Bot Ini</a> (RemainderTugasKuBot)</p>
-                        <p class="text-blue-700">2. Chat ke bot ketik <b>/status</b> atau <b>/id</b></p>
-                        <p class="text-blue-700">3. Bot akan membalas ID Anda, copy lalu paste ke atas.</p>
+                        <p class="font-bold text-blue-800 mb-1">🤔 Cara cari ID Telegram?</p>
+                        <p class="text-blue-700">1. Buka bot di Telegram</p>
+                        <p class="text-blue-700">2. Ketik perintah <b>/status</b></p>
+                        <p class="text-blue-700">3. Copy angka ID yang muncul & paste di atas.</p>
                     </div>
                 </div>
+
                 <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-lg" id="auth-btn">Masuk Sekarang</button>
             </form>
             <div class="mt-6 text-center text-sm"><p id="auth-switch-text" class="text-gray-600">Belum punya akun? <a href="#" onclick="toggleAuthMode()" class="text-blue-600 font-bold hover:underline">Daftar sekarang</a></p></div>
@@ -38,51 +40,53 @@
     </div>
 
     <!-- Dashboard Section -->
-    <div id="dashboard-section" class="hidden p-6 max-w-5xl mx-auto mt-4">
+    <div id="dashboard-section" class="hidden p-4 md:p-6 max-w-5xl mx-auto mt-2">
         
-        <!-- Header & Profil -->
-        <div class="bg-white p-6 rounded-xl shadow-md mb-6">
-            <div class="flex justify-between items-center mb-4">
-                <div>
-                    <h1 class="text-3xl font-extrabold text-gray-800">🎓 Task Manager</h1>
-                    <p class="text-gray-500 font-semibold mt-1">Halo, <span id="user-display-name" class="text-blue-600">Mahasiswa</span>! ✌️</p>
-                </div>
-                <button onclick="logout()" class="bg-red-500 text-white px-5 py-2 rounded-lg font-bold hover:bg-red-600 transition shadow">Logout</button>
+        <!-- Header & Profil (Mobile Friendly) -->
+        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-gray-800">🎓 Task Manager</h1>
+                <p class="text-gray-500 font-semibold mt-1">Halo, <span id="user-display-name" class="text-blue-600">Mahasiswa</span>! ✌️</p>
             </div>
-            
-            <div class="mb-2 flex justify-between text-sm font-bold text-gray-600"><span>Progress Tugas Selesai</span><span id="progress-text">0%</span></div>
+            <button onclick="logout()" class="w-full md:w-auto bg-red-500 text-white px-5 py-2 rounded-lg font-bold hover:bg-red-600 transition shadow">Logout</button>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md mb-6">
+            <div class="mb-2 flex justify-between text-xs md:text-sm font-bold text-gray-600"><span>Progress Tugas Selesai</span><span id="progress-text">0%</span></div>
             <div class="w-full bg-gray-200 rounded-full h-4 shadow-inner overflow-hidden"><div id="progress-bar" class="bg-gradient-to-r from-green-400 to-green-600 h-4 rounded-full progress-bar-animated" style="width: 0%"></div></div>
         </div>
         
-        <!-- Form Tambah/Edit Tugas -->
-        <div class="bg-white p-6 rounded-xl shadow-md mb-8 border-t-4 border-blue-500">
-            <h2 class="text-xl font-bold mb-4 text-gray-700" id="form-title">📝 Tambah Tugas Baru</h2>
+        <!-- Form Tambah/Edit Tugas (Mobile Friendly) -->
+        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md mb-8 border-t-4 border-blue-500">
+            <h2 class="text-lg md:text-xl font-bold mb-4 text-gray-700" id="form-title">📝 Tambah Tugas Baru</h2>
+            <!-- Ditambahkan w-full agar tidak bentrok di HP -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" id="matkul" placeholder="Mata Kuliah" class="p-3 border border-gray-300 rounded-lg">
-                <input type="text" id="deskripsi" placeholder="Deskripsi Tugas" class="p-3 border border-gray-300 rounded-lg">
-                <input type="datetime-local" id="deadline" class="p-3 border border-gray-300 rounded-lg">
-                <select id="prioritas" class="p-3 border border-gray-300 rounded-lg font-semibold">
+                <input type="text" id="matkul" placeholder="Mata Kuliah" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <input type="text" id="deskripsi" placeholder="Deskripsi Tugas" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <input type="datetime-local" id="deadline" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <select id="prioritas" class="w-full p-3 border border-gray-300 rounded-lg font-semibold focus:ring-2 focus:ring-blue-500">
                     <option value="Tinggi">🔥 Prioritas Tinggi</option>
                     <option value="Sedang">⚠️ Prioritas Sedang</option>
                     <option value="Rendah">🟢 Prioritas Rendah</option>
                 </select>
             </div>
-            <div class="flex gap-2 mt-4">
-                <button onclick="simpanTugas()" id="btn-simpan" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition">Simpan Tugas</button>
-                <button onclick="batalEdit()" id="btn-batal" class="hidden bg-gray-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-600">Batal</button>
+            <div class="flex flex-col md:flex-row gap-2 mt-4">
+                <button onclick="simpanTugas()" id="btn-simpan" class="w-full md:flex-1 bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow">Simpan Tugas</button>
+                <button onclick="batalEdit()" id="btn-batal" class="hidden w-full md:w-1/3 bg-gray-500 text-white font-bold py-3 rounded-lg hover:bg-gray-600 shadow">Batal</button>
             </div>
         </div>
 
-        <!-- Filter & Search Bar -->
-        <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4 bg-white p-4 rounded-xl shadow-sm border">
-            <h2 class="text-2xl font-bold text-gray-800 flex-1">📋 Daftar Tugas</h2>
-            <div class="flex w-full md:w-auto gap-2">
-                <input type="text" id="search-input" oninput="renderTugas()" placeholder="🔍 Cari tugas..." class="p-2 border border-gray-300 rounded-lg flex-1 md:w-64">
-                <select id="filter-status" onchange="renderTugas()" class="p-2 border border-gray-300 rounded-lg font-semibold">
-                    <option value="Semua">Semua Tugas</option>
-                    <option value="Aktif">Sedang Aktif</option>
-                    <option value="Selesai">Sudah Selesai</option>
-                    <option value="Tinggi">🔥 Prioritas Tinggi</option>
+        <!-- Filter & Search Bar (Mobile Friendly) -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-3 bg-white p-4 rounded-xl shadow-sm border">
+            <h2 class="text-xl font-bold text-gray-800 w-full md:w-auto text-left">📋 Daftar Tugas</h2>
+            <div class="flex flex-col md:flex-row w-full md:w-auto gap-2">
+                <input type="text" id="search-input" oninput="renderTugas()" placeholder="🔍 Cari..." class="w-full p-2 border border-gray-300 rounded-lg md:w-48 text-sm">
+                <select id="filter-status" onchange="renderTugas()" class="w-full p-2 border border-gray-300 rounded-lg font-semibold text-sm">
+                    <option value="Semua">Semua</option>
+                    <option value="Aktif">Aktif</option>
+                    <option value="Selesai">Selesai</option>
+                    <option value="Tinggi">🔥 Tinggi</option>
                 </select>
             </div>
         </div>
@@ -91,18 +95,16 @@
         <div id="list-tugas" class="grid gap-4 mb-8"></div>
     </div>
 
-    <!-- Script Logic -->
     <script>
         let isLoginMode = true;
         let semuaTugas = [];
         let editId = null;
 
-        // --- AUTH ---
         function toggleAuthMode() {
             isLoginMode = !isLoginMode;
             document.getElementById("auth-title").innerText = isLoginMode ? "Masuk ke Akun Anda" : "Buat Akun Baru";
             document.getElementById("auth-btn").innerText = isLoginMode ? "Masuk Sekarang" : "Daftar Akun";
-            document.getElementById("auth-switch-text").innerHTML = isLoginMode ? 'Belum punya akun? <a href="#" onclick="toggleAuthMode()" class="text-blue-600">Daftar sekarang</a>' : 'Sudah punya akun? <a href="#" onclick="toggleAuthMode()" class="text-blue-600">Masuk di sini</a>';
+            document.getElementById("auth-switch-text").innerHTML = isLoginMode ? 'Belum punya akun? <a href="#" onclick="toggleAuthMode()" class="text-blue-600 font-bold">Daftar sekarang</a>' : 'Sudah punya akun? <a href="#" onclick="toggleAuthMode()" class="text-blue-600 font-bold">Masuk di sini</a>';
             document.getElementById("telegram-input-group").classList.toggle("hidden", isLoginMode);
         }
 
@@ -112,19 +114,21 @@
             const password = document.getElementById("password").value;
             const telegram_id = document.getElementById("telegram_id").value;
 
-            if (isLoginMode) {
-                const formData = new URLSearchParams(); formData.append("username", username); formData.append("password", password);
-                const res = await fetch("/api/login", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: formData });
-                if (res.ok) {
-                    const data = await res.json();
-                    localStorage.setItem("token", data.access_token);
-                    cekStatusLogin();
-                    Swal.fire({ icon: 'success', title: 'Berhasil Masuk!', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
-                } else Swal.fire('Gagal Login', 'Username/password salah.', 'error');
-            } else {
-                const res = await fetch("/api/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password, telegram_id }) });
-                if (res.ok) { Swal.fire('Berhasil!', 'Silakan masuk.', 'success'); toggleAuthMode(); }
-                else { const err = await res.json(); Swal.fire('Gagal', err.detail, 'error'); }
+            try {
+                if (isLoginMode) {
+                    const formData = new URLSearchParams(); formData.append("username", username); formData.append("password", password);
+                    const res = await fetch("/api/login", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: formData });
+                    if (res.ok) {
+                        const data = await res.json(); localStorage.setItem("token", data.access_token);
+                        cekStatusLogin(); Swal.fire({ icon: 'success', title: 'Berhasil Masuk!', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+                    } else throw new Error('Username atau password salah.');
+                } else {
+                    const res = await fetch("/api/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password, telegram_id }) });
+                    if (res.ok) { Swal.fire('Berhasil!', 'Silakan masuk.', 'success'); toggleAuthMode(); }
+                    else { const err = await res.json(); throw new Error(err.detail); }
+                }
+            } catch (error) {
+                Swal.fire('Gagal', error.message, 'error');
             }
         }
 
@@ -135,8 +139,7 @@
             if (token) {
                 document.getElementById("auth-section").classList.add("hidden");
                 document.getElementById("dashboard-section").classList.remove("hidden");
-                loadProfil(); // Ambil data user!
-                loadTugas();
+                loadProfil(); loadTugas();
             } else {
                 document.getElementById("auth-section").classList.remove("hidden");
                 document.getElementById("dashboard-section").classList.add("hidden");
@@ -144,36 +147,32 @@
         }
         function getAuthHeaders() { return { "Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("token")}` }; }
 
-        // --- FETCH PROFIL ---
         async function loadProfil() {
-            const res = await fetch("/api/me", { headers: getAuthHeaders() });
-            if (res.ok) {
-                const user = await res.json();
-                document.getElementById("user-display-name").innerText = user.username.toUpperCase();
-            }
+            try {
+                const res = await fetch("/api/me", { headers: getAuthHeaders() });
+                if (res.ok) { const user = await res.json(); document.getElementById("user-display-name").innerText = user.username.toUpperCase(); }
+            } catch (e) { console.error("Gagal memuat profil"); }
         }
 
-        // --- TUGAS CRUD & RENDER ---
         async function loadTugas() {
-            const res = await fetch("/api/tugas", { headers: getAuthHeaders() });
-            if (res.status === 401) { logout(); return; }
-            semuaTugas = await res.json();
-            renderTugas(); updateProgress();
+            try {
+                const res = await fetch("/api/tugas", { headers: getAuthHeaders() });
+                if (res.status === 401) { logout(); return; }
+                semuaTugas = await res.json();
+                renderTugas(); updateProgress();
+            } catch (e) { console.error("Gagal memuat tugas"); }
         }
 
         function updateProgress() {
             if (semuaTugas.length === 0) { document.getElementById("progress-bar").style.width = "0%"; document.getElementById("progress-text").innerText = "0%"; return; }
             const selesai = semuaTugas.filter(t => t.is_selesai).length;
             const pct = Math.round((selesai / semuaTugas.length) * 100);
-            document.getElementById("progress-bar").style.width = `${pct}%`;
-            document.getElementById("progress-text").innerText = `${pct}% (${selesai}/${semuaTugas.length})`;
+            document.getElementById("progress-bar").style.width = `${pct}%`; document.getElementById("progress-text").innerText = `${pct}% (${selesai}/${semuaTugas.length})`;
         }
 
         function renderTugas() {
             const listTugas = document.getElementById("list-tugas");
             listTugas.innerHTML = "";
-            
-            // Logika Search & Filter
             const searchQ = document.getElementById("search-input").value.toLowerCase();
             const filterStat = document.getElementById("filter-status").value;
 
@@ -186,14 +185,13 @@
                 return matchSearch && matchFilter;
             });
 
-            // Logika SORTING (Selesai taruh bawah, Aktif taruh atas diurutkan dari deadline terdekat)
             tugasTampil.sort((a, b) => {
                 if (a.is_selesai === b.is_selesai) return new Date(a.deadline) - new Date(b.deadline);
                 return a.is_selesai ? 1 : -1;
             });
 
             if (tugasTampil.length === 0) {
-                listTugas.innerHTML = `<div class="text-center p-8 bg-white rounded shadow text-gray-500">Tidak ada tugas yang sesuai.</div>`;
+                listTugas.innerHTML = `<div class="text-center p-6 bg-white rounded-xl shadow text-gray-500 text-sm">Tidak ada tugas.</div>`;
                 return;
             }
 
@@ -207,25 +205,26 @@
                 else if (tugas.prioritas === "Sedang") { borderKiri = isS ? "border-gray-400" : "border-yellow-500"; badgeW = "bg-yellow-100 text-yellow-700"; }
 
                 listTugas.innerHTML += `
-                    <div class="${bgW} p-5 rounded-xl shadow-md border-l-8 ${borderKiri} flex flex-col md:flex-row justify-between items-start md:items-center">
-                        <div class="mb-4 md:mb-0">
-                            <div class="flex items-center gap-3 mb-1">
-                                <h3 class="font-bold text-xl ${textC}">${tugas.mata_kuliah}</h3>
+                    <div class="${bgW} p-4 md:p-5 rounded-xl shadow-md border-l-8 ${borderKiri} flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div class="w-full">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <h3 class="font-bold text-lg md:text-xl ${textC}">${tugas.mata_kuliah}</h3>
                                 <span class="text-xs font-bold px-2 py-1 rounded-full ${badgeW}">${tugas.prioritas}</span>
                                 ${isS ? '<span class="text-xs font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-700">✅ Selesai</span>' : ''}
                             </div>
-                            <p class="${textC} font-medium">${tugas.deskripsi}</p>
-                            <p class="text-sm text-red-500 mt-2 font-semibold flex items-center">
-                                📅 Deadline: ${new Date(tugas.deadline).toLocaleString('id-ID', {weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute:'2-digit'})}
+                            <p class="${textC} font-medium text-sm md:text-base">${tugas.deskripsi}</p>
+                            <p class="text-xs md:text-sm text-red-500 mt-2 font-semibold flex items-center">
+                                📅 ${new Date(tugas.deadline).toLocaleString('id-ID', {day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit'})}
                             </p>
                         </div>
                         
+                        <!-- Tombol Full Width di Mobile -->
                         <div class="flex gap-2 w-full md:w-auto">
-                            <button onclick="toggleStatus(${tugas.id})" class="flex-1 md:flex-none ${isS ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'} text-white px-4 py-2 rounded-lg font-bold shadow">
-                                ${isS ? 'Batal Selesai' : '✔ Selesai'}
+                            <button onclick="toggleStatus(${tugas.id})" class="flex-1 md:flex-none ${isS ? 'bg-yellow-500' : 'bg-green-500'} text-white px-3 py-2 rounded-lg font-bold text-sm shadow">
+                                ${isS ? 'Batal' : '✔ Selesai'}
                             </button>
-                            <button onclick="siapkanEdit(${tugas.id})" class="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-600 shadow" ${isS ? 'disabled' : ''}>✏️</button>
-                            <button onclick="hapusTugas(${tugas.id})" class="bg-red-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-600 shadow">🗑️</button>
+                            <button onclick="siapkanEdit(${tugas.id})" class="bg-blue-500 text-white px-3 py-2 rounded-lg font-bold text-sm shadow" ${isS ? 'disabled' : ''}>✏️</button>
+                            <button onclick="hapusTugas(${tugas.id})" class="bg-red-500 text-white px-3 py-2 rounded-lg font-bold text-sm shadow">🗑️</button>
                         </div>
                     </div>
                 `;
@@ -233,8 +232,18 @@
         }
 
         async function simpanTugas() {
-            const data = { matkul: document.getElementById("matkul").value, deskripsi: document.getElementById("deskripsi").value, deadline: document.getElementById("deadline").value, prioritas: document.getElementById("prioritas").value, is_selesai: false };
-            if (!data.matkul || !data.deadline) { Swal.fire('Oops!', 'Mata kuliah dan deadline wajib diisi!', 'warning'); return; }
+            const data = { matkul: document.getElementById("matkul").value, deskripsi: document.getElementById("deskripsi").value, deadline: document.getElementById("deadline").value, prioritas: document.getElementById("prioritas").value };
+            
+            if (!data.matkul || !data.deadline) { 
+                Swal.fire('Oops!', 'Mata kuliah dan deadline wajib diisi!', 'warning'); 
+                return; 
+            }
+
+            // Ubah tombol jadi status loading biar kelihatan diklik
+            const btnSimpan = document.getElementById("btn-simpan");
+            const teksAsli = btnSimpan.innerText;
+            btnSimpan.innerText = "⏳ Menyimpan...";
+            btnSimpan.disabled = true;
             
             let url = "/api/tugas"; let method = "POST";
             let sendData = { mata_kuliah: data.matkul, deskripsi: data.deskripsi, deadline: data.deadline, prioritas: data.prioritas, is_selesai: false };
@@ -244,8 +253,24 @@
                 sendData.is_selesai = semuaTugas.find(t => t.id === editId).is_selesai;
             }
 
-            const res = await fetch(url, { method: method, headers: getAuthHeaders(), body: JSON.stringify(sendData) });
-            if (res.ok) { Swal.fire({ icon: 'success', title: editId ? 'Terupdate!' : 'Tersimpan!', showConfirmButton: false, timer: 1500 }); kosongkanForm(); loadTugas(); }
+            try {
+                const res = await fetch(url, { method: method, headers: getAuthHeaders(), body: JSON.stringify(sendData) });
+                
+                if (res.ok) { 
+                    Swal.fire({ icon: 'success', title: editId ? 'Terupdate!' : 'Tersimpan!', showConfirmButton: false, timer: 1500 }); 
+                    kosongkanForm(); 
+                    loadTugas(); 
+                } else {
+                    const err = await res.json();
+                    throw new Error(err.detail || "Gagal menyimpan ke database");
+                }
+            } catch (error) {
+                Swal.fire('Gagal Menyimpan!', error.message, 'error');
+            } finally {
+                // Kembalikan tombol seperti semula
+                btnSimpan.innerText = teksAsli;
+                btnSimpan.disabled = false;
+            }
         }
 
         async function hapusTugas(id) {
