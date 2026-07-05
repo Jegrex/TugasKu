@@ -245,7 +245,7 @@
             btnSimpan.innerText = "⏳ Menyimpan...";
             btnSimpan.disabled = true;
             
-            let url = "/api/tugas"; let method = "POST";
+            let url = "/api/tugas/"; let method = "POST";
             let sendData = { mata_kuliah: data.matkul, deskripsi: data.deskripsi, deadline: data.deadline, prioritas: data.prioritas, is_selesai: false };
 
             if (editId) {
