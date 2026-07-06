@@ -100,8 +100,8 @@ async def cek_deadline_1930():
 
 async def start_bot():
     scheduler = AsyncIOScheduler(timezone=ZoneInfo("Asia/Jakarta"))
-    scheduler.add_job(daily_recap_0700, CronTrigger(hour=7, minute=0))
-    scheduler.add_job(cek_deadline_1930, CronTrigger(hour=19, minute=30))
+    scheduler.add_job(daily_recap_0700, CronTrigger(hour=12, minute=0))
+    scheduler.add_job(cek_deadline_1930, CronTrigger(hour=1, minute=0))
     scheduler.start()
     print("🤖 Bot Roasting Aktif! Jadwal: 07:00 Pagi & 19:30 Malam (WIB).")
     await dp.start_polling(bot)

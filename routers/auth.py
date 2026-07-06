@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
-
+from datetime import datetime, timedelta
 from database import get_session
 from models import User, UserCreate
 from security import get_password_hash, verify_password, create_access_token
@@ -40,3 +40,4 @@ def get_me(current_user: User = Depends(get_current_user)):
         "username": current_user.username,
         "telegram_id": current_user.telegram_id
     }
+
