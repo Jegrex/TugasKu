@@ -20,7 +20,6 @@ class Tugas(SQLModel, table=True):
     is_diingatkan_h3: bool = False
     is_diingatkan_h2: bool = False
     is_diingatkan_h1: bool = False
-    
     owner_id: Optional[int] = Field(default=None, foreign_key="user.id")
 
 class UserCreate(BaseModel):

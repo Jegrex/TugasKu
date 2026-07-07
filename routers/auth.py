@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from database import get_session
 from models import User, UserCreate
 from security import get_password_hash, verify_password, create_access_token
+from pydantic import BaseModel
 
 # Membuat pengelompokan API (Router)
 router = APIRouter(prefix="/api", tags=["Auth"])
@@ -41,3 +42,12 @@ def get_me(current_user: User = Depends(get_current_user)):
         "telegram_id": current_user.telegram_id
     }
 
+class TelegramUpdate(BaseModel):
+    telegram_id: str
+
+@router.put("/me/telegram")
+def update_telegram(data: TelegramUpdate, current_user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    current_user.telegram_id = data.telegram_id
+    session.add(current_user)
+    session.commit()
+    return {"message": "Telegram ID berhasil diupdate"}

@@ -10,3 +10,5 @@ aiogram
 apscheduler
 tzdata
 python-multipart
+pytz
+tzdata
